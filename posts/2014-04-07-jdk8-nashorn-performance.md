@@ -1,30 +1,30 @@
 ---
-title: JDK8's Nashorn Performance
+title: JDK8's Nashorn Performance Issues
 tags: [jdk8, nashorn, typescript]
 ---
 
 # {{ title }}
 
-I was quite excited when Oracle announced the release of JDK8. While most people talked
+I'm generally excited about being able to run a language on multiple platforms, it can often save
+you writing a lot of duplicate code and simplify your build process.
+
+I was therefore happy when Oracle announced the release of JDK8. While most people talked
 about lambdas, I was more interested in the new JavaScript engine Nashorn, which
 came [promising to significantly outperform
 the old Rhino engine and provide a nicer interop with Java
 code](http://java.dzone.com/articles/project-nashorn-javascripts)
 the supposedly high-performance JavaScript engine with a nice interface to Java code, thus replacing
-Rhino.
-
-I'm generally excited about language interop, it can save a lot of code to be written or at least
-simplify your build process.
+Rhino, which, frankly, is unnecessarily painful to work with.
 
 Thus, when [TypeScript 1.0](http://blogs.msdn.com/b/typescript/archive/2014/04/02/announcing-typescript-1-0.aspx)
-came out I thought it'd be great to TypeScript compilation fast on the JVM at last,
+came out I thought it'd be great to make TypeScript compile fast on the JVM at last,
 so I jumped straight in and [hacked the compiler to support Java's
 IO via Nashorn](https://github.com/coudy/typescript/compare/9ac01de...1.0-nashorn).
 
 However, when I tried compiling two simple lines of TypeScript with `jake && jjs built/local/tsc.js -- hello.ts`
-I had to wait 90 seconds for my `hello.js`, compared with three seconds using Node.js. Something wasn't
+it actually took 90 seconds for my `hello.js` to appear, compared with three seconds using Node.js. Something wasn't
 right. I suspected an integration cock-up on my part but no amount of head scratching pointed in
-tnat direction.
+that direction.
 
 ## Trying Octane
 
@@ -81,7 +81,15 @@ time was spent in rewiring `CallSite`s and other `invokedynamic` related logic:
 
 ![91% of time spent in LambdaForm...linkToCallSite]({{urls.media}}/yourkit-typescript-nashorn.png)
 
-Curious to see how Nashorn would perform in a JavaFX app, I profiled the following code:
+This is something Nashorn probably wouldn't have to do if it spotted that most references don't change.
+However, that is made harder by the fact that the TypeScript compiler code uses TypeScript's internal module
+system, which exposes the module objects to the whole enviroment, so the JS engine must suspect
+that those module objects have changed or monkey-patched at any time.
+So it might be hard to spot that unless you're say V8, which has been around for years. But of course,
+that is just a speculation, and most JavaScript is written like that, so Nashorn should definitely
+deal with that.
+
+Curious to find out why Nashorn performs much better in a JavaFX app, I profiled the following code:
 
     package eu.coudy.fx8;
 
@@ -129,26 +137,29 @@ There were no stack traces available for the rendering or JavaScript evaluation:
 
 ![invokeLaterDispatcher taking nearly all of the time]({{urls.media}}/yourkit-octane-javafx.png)
 
-## Nashorn and JavaFX
+## Ha! It's not Nashorn at all!
 
 Suspecting it wasn't actually Nashorn but something native, I checked a few things using JSConsole.
 The WebView clearly behaved differently from `jjs`:
+
 - It didn't have Mozilla's syntax extensions
 - Setting the `__proto__` property didn't barf
 - `java` & `Java` objects didn't exist
 - Java interop code used types from the bizarrely named `netscape.javascript` package
 
-Checking out (`hg clone http://hg.openjdk.java.net/openjfx/8/master/rt`) I found out `WebView` was
-basically WebKit with its stock JavaScriptCore engine and wrappers for Java interop.
+Checking out the JDK8 code (`hg clone http://hg.openjdk.java.net/openjfx/8/master/rt`) I found out
+`WebView` was basically WebKit with its stock JavaScriptCore engine and wrappers for Java interop.
 
 This feels completely unlike [the early PR](http://java.dzone.com/articles/project-nashorn-javascripts)
 and while Oracle are now apparently improving Nashorn by caching the JIT'ed
-bytecode, but the cache doesn't persist across processes, this won't solve the general sluggishness.
-This is quite disappointing. I don't want JavaScript code to be faster when run for the 20th time
-in the same process, I need it fast now!
+bytecode to optimise server-side applications, the cache doesn't persist across processes, so this
+won't solve the general sluggishness.
 
-Sadly, it turns out we're not quite there yet when it comes to an easily integratable, debuggable
+This is a real shame and it means we're not quite there yet when it comes to an easily integratable, debuggable
 high performance JavaScript engine for the JVM, but at least there's JavaFX,
 which could probably be hacked with a fake `WebView` to work as a pure JavaScript engine
 (I'm certainly going to try that), and you can obviously still use Rhino, which [will in many cases be
 faster](https://bugs.openjdk.java.net/browse/JDK-8019254?focusedCommentId=13360855&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-13360855).
+
+I'd still argue this isn't bad for a first cut, so well done, Oracle, and hope you fix performance
+issues soon, because that'd be awesome!
