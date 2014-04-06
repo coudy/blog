@@ -1,0 +1,11 @@
+widgets:
+  analytics:
+    use: getclicky
+    site_id: 100722617
+  comments:
+    use: disqus
+    short_name: coudy
+  sharing:
+    use: addthis
+
+date_format: '%d %B %Y'
