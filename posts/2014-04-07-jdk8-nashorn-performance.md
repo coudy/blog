@@ -1,5 +1,5 @@
 ---
-title: JDK8's Nashorn Performance Issues
+title: JDK8's Nashorn performance issues
 tags: [jdk8, nashorn, typescript]
 ---
 
