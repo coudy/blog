@@ -11,6 +11,10 @@
   float:right;
 }
 
+.navbar .nav .fa {
+  font-size: 20px;
+}
+
 /* posts index */
 .post > h3.title {
   position:relative;

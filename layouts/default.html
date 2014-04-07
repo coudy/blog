@@ -21,6 +21,8 @@
       google_prettify/sons-of-obsidian.css
     {{/ stylesheets.load }}
 
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
     <!-- Le fav and touch icons -->
   <!-- Update these with your own images
     <link rel="shortcut icon" href="images/favicon.ico">
@@ -39,7 +41,10 @@
           <ul class="nav">
             {{# data.navigation?to__root }}
               {{> pages_list }}
-              <a href="/rss.xml"><img alt="RSS" style="margin-top: 6px" src="{{urls.media}}/feed-icon.svg" width="28" height="28" /></a>
+              <li><a href="http://twitter.com/granolabowl"><i class="fa fa-twitter"></i></a</li>
+              <li><a href="http://github.com/coudy"><i class="fa fa-github"></i></a</li>
+              <li><a href="http://uk.linkedin.com/pub/michal-cudrnak/19/902/9a8/"><i class="fa fa-linkedin"></i></a</li>
+              <li><a href="/rss.xml"><i class="fa fa-rss-square"></i></a</li>
             {{/ data.navigation?to__root }}
           </ul>
         </div>
