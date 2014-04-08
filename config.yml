@@ -1,10 +1,10 @@
 widgets:
   analytics:
-    use: getclicky
-    site_id: 100722617
+    use: clicky
+    site_id: 100725013
   comments:
     use: disqus
-    short_name: coudy
+    short_name: softwarecenturion
   sharing:
     use: addthis
 
